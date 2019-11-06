@@ -1,0 +1,8 @@
+.idea/**
+__pycache__/**
+au.json
+ca.json
+uk.json
+us.json
+venv/**
+dbconfig.py
