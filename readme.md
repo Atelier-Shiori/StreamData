@@ -3,12 +3,14 @@ Stream Data is a REST API that allows applications to retrieve a list of legal s
 
 The app uses legal stream link data [Because.moe](https://because.moe). The difference is that the whole stream data does not need to be downloaded completely and only need to retreive what you need. You will be able to use the title or MyAnimeList ID to look up links for a given title.
 
-StreamData only supports Python 3.
+StreamData only supports Python 3. 
 
 # Why StreamData?
 Providing stream links to your applications allows users to find where to watch a given show through legal streaming. Illegal/Pirated streams hurts the creators and animation studios that make an anime production possible. StreamData only provides legal sources where you can watch a given title (e.g. Crunchyroll, Funimation, Amazon, HiDive, etc) and not illegal sources.
 
 This API enables you to obtain links where the user can watch a show legally through your app for a given title. StreamData only supports the following regions: United States, Canada, United Kingdom and Australia.
+
+StreamData is a free service and you do not need to be an active Patron to use it. If you want to help us keep the service running, feel free to [become a Patron](https://www.patreon.com/join/malupdaterosx) for as little as $1 a month.
 
 # How does StreamData works?
 StreamData uses two different scripts. load.py is the script that is set to run as a cron job that refreshes the data in the database on a DBMS running MySQL/MariaDB. It performs some ETL (Extract, Transform, and Load). It downloads the stream data from the provider, load it to a staging table. The data is transformed and loaded to the data model. The ERD diagram for the database backend
