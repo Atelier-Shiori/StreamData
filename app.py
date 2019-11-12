@@ -19,21 +19,49 @@
 """
 import dbconfig
 import mysql.connector
-import json
 
-from flask import Flask, request
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-
 @app.route('/search/<region>', methods=['GET'])
 def get_searchtitle(region):
-    query = request.form['q']
+    query = request.args['q']
+    return loadResultsByQuery(query, region)
+
+@app.route('/lookup/<region>/<int:malid>', methods=['GET'])
+def get_mallookup(region, malid):
+    return loadResultsByMALID(malid, region)
 
 def loadResultsByQuery(query, region) :
     mydb = openConnection()
-    mycursor = mydb.cursor()
-    sql = "SELECT "
+    mycursor = mydb.cursor(dictionary=True)
+    sql = "SELECT t.title, s.sitename, r.regionname, l.url, t.mal_id from region AS r, links AS l, sites AS s, titles AS t WHERE l.titleid = t.titleid AND l.siteid = s.id AND l.regionid = r.id AND r.regionname = %s AND t.title LIKE %s"
+    val = [region, query]
+    mycursor.execute(sql,val)
+    results = mycursor.fetchall()
+    fresults = type(dict);
+    if len(results) > 0 :
+        fresults = {"data" : results, "meta":{"query": query, "region":region, "count": len(results)}}
+        return jsonify(fresults), 200
+    else :
+        fresults = {"data": None, "error" : "Not Found", "meta":{"query": query, "region":region}}
+        return jsonify(fresults), 400
+
+def loadResultsByMALID(malid, region) :
+    mydb = openConnection()
+    mycursor = mydb.cursor(dictionary=True)
+    sql = "SELECT t.title, s.sitename, r.regionname, l.url, t.mal_id from region AS r, links AS l, sites AS s, titles AS t WHERE l.titleid = t.titleid AND l.siteid = s.id AND l.regionid = r.id AND r.regionname = %s AND t.mal_id = %s"
+    val = [region, malid]
+    mycursor.execute(sql,val)
+    results = mycursor.fetchall()
+    fresults = type(dict);
+    if len(results) > 0 :
+        fresults = {"data" : results, "count": len(results)}
+        return jsonify(fresults), 200
+    else :
+        fresults = {"data": None, "error" : "Not Found"}
+        return jsonify(fresults), 400
 
 def openConnection():
     mydb = mysql.connector.connect(
@@ -44,3 +72,6 @@ def openConnection():
         auth_plugin='mysql_native_password'
     )
     return mydb
+
+if __name__ == '__main__':
+    app.run(debug=True)
