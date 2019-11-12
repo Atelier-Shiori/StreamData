@@ -6,3 +6,4 @@ uk.json
 us.json
 venv/**
 dbconfig.py
+appconfig.py

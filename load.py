@@ -22,13 +22,13 @@ import urllib.request
 import mysql.connector
 import json
 import ssl
-import dbconfig
+import appconfig
 
 mydb = mysql.connector.connect(
-  host=dbconfig.db_host,
-  user=dbconfig.db_user,
-  password=dbconfig.db_user_password,
-  database=dbconfig.db_name,
+  host=appconfig.db_host,
+  user=appconfig.db_user,
+  password=appconfig.db_user_password,
+  database=appconfig.db_name,
   auth_plugin='mysql_native_password'
 )
 

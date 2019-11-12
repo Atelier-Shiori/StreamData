@@ -17,7 +17,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import dbconfig
+import appconfig
 import mysql.connector
 
 from flask import Flask, request, jsonify
@@ -65,10 +65,10 @@ def loadResultsByMALID(malid, region) :
 
 def openConnection():
     mydb = mysql.connector.connect(
-        host=dbconfig.db_host,
-        user=dbconfig.db_user,
-        password=dbconfig.db_user_password,
-        database=dbconfig.db_name,
+        host=appconfig.db_host,
+        user=appconfig.db_user,
+        password=appconfig.db_user_password,
+        database=appconfig.db_name,
         auth_plugin='mysql_native_password'
     )
     return mydb

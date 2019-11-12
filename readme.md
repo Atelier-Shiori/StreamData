@@ -23,21 +23,109 @@ The frontend provides the rest API, allowing the user's apps to obtain stream da
 * Following packages installed: mysql-connector-python, flask, urllib
 
 # How to use the API
-TODO
+## API Endpoints
+```
+GET http://streamdata.malupdaterosx.moe/search/(region)?q=(search term)
+```
+#### Parameters
 
+| Parameter | Value | Required |
+|:---|:---|:---|
+| region| `us` or `ca` or `uk` or `ai` | `true` |
+| q | Title (URL Encoded) | `true` |
+
+#### Example
+```
+[GET] http://streamdata.malupdaterosx.moe/search/us?q=Kandagawa%20Jet%20Girls
+```
+
+##### Response
+```
+{
+  "data": [
+    {
+      "mal_id": 40196, 
+      "regionname": "us", 
+      "sitename": "vrv-hidive", 
+      "title": "Kandagawa Jet Girls", 
+      "url": "https://vrv.co/series/GYW4N30E6"
+    }, 
+    {
+      "mal_id": 40196, 
+      "regionname": "us", 
+      "sitename": "hidive", 
+      "title": "Kandagawa Jet Girls", 
+      "url": "https://www.hidive.com/stream/kandagawa-jet-girls/s01e001"
+    }
+  ], 
+  "meta": {
+    "count": 2, 
+    "query": "Kandagawa Jet Girls", 
+    "region": "us"
+  }
+}
+
+```
+
+```
+GET http://streamdata.malupdaterosx.moe/lookup/(region)/(MAL ID)
+```
+#### Parameters
+
+| Parameter | Value | Required |
+|:---|:---|:---|
+| region| `us` or `ca` or `uk` or `ai` | `true` |
+| MAL ID| MyAnimeList Title ID | `true` |
+
+#### Example
+```
+[GET] http://streamdata.malupdaterosx.moe/lookup/us/40196
+```
+
+##### Response
+```
+{
+  "data": [
+    {
+      "mal_id": 40196, 
+      "regionname": "us", 
+      "sitename": "vrv-hidive", 
+      "title": "Kandagawa Jet Girls", 
+      "url": "https://vrv.co/series/GYW4N30E6"
+    }, 
+    {
+      "mal_id": 40196, 
+      "regionname": "us", 
+      "sitename": "hidive", 
+      "title": "Kandagawa Jet Girls", 
+      "url": "https://www.hidive.com/stream/kandagawa-jet-girls/s01e001"
+    }
+  ], 
+  "meta": {
+    "count": 2, 
+    "query": "Kandagawa Jet Girls", 
+    "region": "us"
+  }
+}
+
+```
 # How to setup the API server
 ## 1. Install the necessary Python packages
 ```
-pip install mysql-connector-python, flask, urllib
+pip3 install mysql-connector-python flask
 ```
+
 ## 2. Load the database schema by importing db.sql
+
 ## 3. Database configuration
-Copy dbconfig_sample.py and rename it to dbconfig.py. Edit the dbconfig.py and specify the database user, password, server and database the app will use.
+Copy appconfig_sample.py and rename it to appconfig.py. Edit the dbconfig.py and specify the database user, password, server and database the app will use.
+
 ## 4. Adding the load.py script to the crontab
 A cron job needs to be created so it can run the load.py, which updates the stream data in the database. Add the following to the crontab. You can edit the crontab by typing `crontab -e` into the terminal. Note that you need to replace "/path/to/StreamData" with the proper absolute path to the load.py script
 ```
 0 0 1 * * python3 /path/to/StreamData/load.py > load.log
 ```
+
 ## 5. Create system.d service
 StreamData runs as a service which Apache with a virtual site will access as a reserve proxy. All the requests StreamData recieves from Apache will get processed and the response sent back to Apache, which it will get served to the Flask application.
 
@@ -76,6 +164,7 @@ Start and verify that Hato is running.
 ```
 sudo service streamdata start
 ```
+
 ## 6. Configure Apache
 Make sure mod_proxy, mod_proxy_http is enabled. You can do this by running the following commands.
 ```
