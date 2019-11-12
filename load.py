@@ -17,7 +17,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
 import urllib.request
 import mysql.connector
 import json
@@ -40,10 +39,14 @@ def main():
     for region in regions:
         downloadStreamData(region)
         loadStagingTables(region)
+    print('Downloading title database')
+    downloadTitleIDs()
     loadRegions()
     loadSites()
     loadTitles()
+    loadMALIds()
     loadLinks()
+    cleanup()
     mydb.close()
     print("Done")
 
@@ -51,6 +54,41 @@ def downloadStreamData(region):
     print('Downloading Stream Data: ' + region)
     ssl._create_default_https_context = ssl._create_unverified_context
     urllib.request.urlretrieve('https://bcmoe.blob.core.windows.net/assets/'+region+'.json', region + '.json');
+
+def downloadTitleIDs():
+    print('Downloading Title Ids')
+    ssl._create_default_https_context = ssl._create_unverified_context
+    urllib.request.urlretrieve('https://raw.githubusercontent.com/manami-project/anime-offline-database/master/anime-offline-database.json', 'anime-offline-database.json');
+
+def loadMALIds():
+    print('Loading MyAnimeList title ids')
+    with open('anime-offline-database.json') as json_file:
+        titledata = json.load(json_file)
+        mycursor = mydb.cursor(dictionary=True)
+        sql = "SELECT titleid, title, mal_id FROM titles WHERE mal_id IS NULL;"
+        mycursor.execute(sql)
+        results = mycursor.fetchall()
+        if len(results) > 0:
+            for title in results:
+                for titlerecord in titledata['data']:
+                    comparetitle = title['title']
+                    ntitle = titlerecord['title'];
+                    match = False
+                    if ntitle.upper() == comparetitle.upper():
+                        match = True
+                    else:
+                        for synonym in titlerecord['synonyms']:
+                            if synonym.upper() == comparetitle.upper():
+                                match = True
+                                break
+                    if match:
+                        for source in titlerecord['sources']:
+                            if "myanimelist.net" in source:
+                                tmpstr = source.replace("https://myanimelist.net/anime/", "")
+                                titleidint = int(tmpstr)
+                                updateAddMALID(title["titleid"], titleidint)
+                                break
+    print('Loading MyAnimeList title ids done')
 
 def truncateStagingTables():
     print('Truncating staging tables')
@@ -161,6 +199,13 @@ def loadTitles():
     mydb.commit()
     print('Loading titles table done')
 
+def updateAddMALID(id, malid):
+    updatecursor = mydb.cursor()
+    sql = "UPDATE titles SET mal_id = %s WHERE titleid = %s"
+    val = [malid, id]
+    updatecursor.execute(sql,val)
+    mydb.commit()
+
 def checkTitle(title):
     mycursor = mydb.cursor(dictionary=True)
     sql = "SELECT titleid, title FROM titles WHERE title = %s;"
@@ -227,6 +272,31 @@ def lookupRegion(region):
         return results[0]["id"]
     return -1
 
-if __name__== "__main__":
-  main()
+def cleanup():
+    print('Performing cleanup')
+    mycursor = mydb.cursor(dictionary=True)
+    sql = "SELECT l.id, t.title, s.sitename, r.regionname, l.url, t.mal_id from region AS r, links AS l, sites AS s, titles AS t WHERE l.titleid = t.titleid AND l.siteid = s.id AND l.regionid = r.id"
+    mycursor.execute(sql)
+    loadedresults = mycursor.fetchall()
+    sql = "SELECT * FROM staging"
+    mycursor.execute(sql)
+    stagingresults = mycursor.fetchall()
+    for loadedresult in loadedresults:
+        found = False
+        for stageresult in stagingresults:
+            if loadedresult["url"] == stageresult["streamsiteurl"] and loadedresult["regionname"] == stageresult["region"]:
+                found = True
+        if not found:
+            print("Stream no longer exist, deleting URL: " + loadedresult["url"])
+            deleteLink(loadedresult["id"])
+    print("Cleanup complete")
 
+def deleteLink(id):
+    deletecursor = mydb.cursor()
+    sql = "DELETE FROM links WHERE id = %s"
+    val = [id]
+    deletecursor.execute(sql, val)
+    mydb.commit()
+
+if __name__== "__main__":
+    main()

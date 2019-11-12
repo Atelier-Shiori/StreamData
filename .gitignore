@@ -7,3 +7,4 @@ us.json
 venv/**
 dbconfig.py
 appconfig.py
+anime-offline-database.json
