@@ -1,4 +1,4 @@
-CREATE TABLE shukofukurou_streamdata.links (
+CREATE TABLE links (
 	id int(10) NOT NULL auto_increment,
 	titleid int(10) NOT NULL,
 	url varchar(500),
@@ -7,19 +7,19 @@ CREATE TABLE shukofukurou_streamdata.links (
 	PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-CREATE TABLE shukofukurou_streamdata.region (
+CREATE TABLE region (
 	id int(10) NOT NULL auto_increment,
 	regionname text(65535) NOT NULL,
 	PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-CREATE TABLE shukofukurou_streamdata.sites (
+CREATE TABLE sites (
 	id int(10) NOT NULL auto_increment,
 	sitename text(65535) NOT NULL,
 	PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-CREATE TABLE shukofukurou_streamdata.staging (
+CREATE TABLE staging (
 	id int(10) NOT NULL auto_increment,
 	title varchar(500),
 	streamsitetitle varchar(100),
@@ -28,7 +28,7 @@ CREATE TABLE shukofukurou_streamdata.staging (
 	PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE shukofukurou_streamdata.titles (
+CREATE TABLE titles (
 	titleid int(10) NOT NULL auto_increment,
 	title varchar(500),
 	mal_id int(10),
