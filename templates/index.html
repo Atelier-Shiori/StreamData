@@ -18,12 +18,6 @@
 <h1 id="how-does-streamdata-works-">How does StreamData works?</h1>
 <p>StreamData uses two different scripts. load.py is the script that is set to run as a cron job that refreshes the data in the database on a DBMS running MySQL/MariaDB. It performs some ETL (Extract, Transform, and Load). It downloads the stream data from the provider, load it to a staging table. The data is transformed and loaded to the data model.</p>
 <p>The frontend provides the rest API, allowing the user&#39;s apps to obtain stream data by title or MyAnimeList title id.</p>
-<h1 id="requirements">Requirements</h1>
-<ul>
-<li>Apache with the proxy and proxy_http module installed and enabled</li>
-<li>Python 3.x or later</li>
-<li>Following packages installed: mysql-connector-python, flask, urllib</li>
-</ul>
 <h1 id="how-to-use-the-api">How to use the API</h1>
 <h2 id="api-endpoints">API Endpoints</h2>
 <pre><code>GET http:<span class="hljs-regexp">//</span>streamdata.malupdaterosx.moe<span class="hljs-regexp">/search/</span>(region)?q=(search term)
@@ -124,70 +118,7 @@
     <span class="hljs-attr">"region"</span>: <span class="hljs-string">"us"</span>
   }
 }
-</code></pre><h1 id="how-to-setup-the-api-server">How to setup the API server</h1>
-<h2 id="1-install-the-necessary-python-packages">1. Install the necessary Python packages</h2>
-<pre><code>pip3 <span class="hljs-keyword">install</span> mysql-connector-python flask
-</code></pre><h2 id="2-load-the-database-schema-by-importing-db-sql">2. Load the database schema by importing db.sql</h2>
-<h2 id="3-database-configuration">3. Database configuration</h2>
-<p>Copy appconfig_sample.py and rename it to appconfig.py. Edit the dbconfig.py and specify the database user, password, server and database the app will use.</p>
-<h2 id="4-adding-the-load-py-script-to-the-crontab">4. Adding the load.py script to the crontab</h2>
-<p>A cron job needs to be created so it can run the load.py, which updates the stream data in the database. Add the following to the crontab. You can edit the crontab by typing <code>crontab -e</code> into the terminal. Note that you need to replace &quot;/path/to/StreamData&quot; with the proper absolute path to the load.py script</p>
-<pre><code><span class="hljs-symbol">0 </span><span class="hljs-number">0</span> <span class="hljs-number">1</span> * * python3 /path/<span class="hljs-keyword">to</span>/StreamData/<span class="hljs-keyword">load</span>.py &gt; <span class="hljs-keyword">load</span>.<span class="hljs-keyword">log</span>
-</code></pre><h2 id="5-create-system-d-service">5. Create system.d service</h2>
-<p>StreamData runs as a service which Apache with a virtual site will access as a reserve proxy. All the requests StreamData recieves from Apache will get processed and the response sent back to Apache, which it will get served to the Flask application.</p>
-<p>To create a service, run the following in the terminal:</p>
-<pre><code>sudo nano <span class="hljs-regexp">/etc/</span>systemd<span class="hljs-regexp">/system/</span>streamdata.service
-</code></pre><p>Paste the following into hato.service and save the file.</p>
-<pre><code><span class="hljs-section">[Unit]</span>
-<span class="hljs-attr">Description</span>=StreamData Service Web API
-<span class="hljs-section">
-[Service]</span>
-<span class="hljs-attr">WorkingDirectory</span>=/path/to/StreamData
-<span class="hljs-attr">ExecStart</span>=python3 /path/to/StreamData/app.py
-<span class="hljs-attr">Restart</span>=always
-<span class="hljs-comment"># Restart service after 10 seconds if the dotnet service crashes:</span>
-<span class="hljs-attr">RestartSec</span>=<span class="hljs-number">10</span>
-<span class="hljs-attr">KillSignal</span>=SIGINT
-<span class="hljs-attr">SyslogIdentifier</span>=streamdata-api
-<span class="hljs-attr">User</span>=www-data
-<span class="hljs-attr">Environment</span>=FLASK_ENV=production
-<span class="hljs-section">
-[Install]</span>
-<span class="hljs-attr">WantedBy</span>=multi-user.target
-</code></pre><p>Enable the service by running the following:</p>
-<pre><code>sudo systemctl <span class="hljs-built_in">enable</span> streamdata.service
-</code></pre><p>Start and verify that Hato is running.</p>
-<pre><code><span class="hljs-symbol">sudo</span> service <span class="hljs-keyword">streamdata </span>start
-</code></pre><h2 id="6-configure-apache">6. Configure Apache</h2>
-<p>Make sure mod_proxy, mod_proxy_http is enabled. You can do this by running the following commands.</p>
-<pre><code><span class="hljs-attribute">sudo</span> a2enmod proxy
-sudo a2enmod proxy_http
-</code></pre><p>In <code>/etc/apache2/sites-available</code>, create a site configuration file called hato.conf with the following. (Change the server name to the domain name where you will host the service)</p>
-<pre><code><span class="hljs-section">&lt;VirtualHost *:*&gt;</span>
-<span class="hljs-attribute"><span class="hljs-nomarkup">ServerName</span></span> (domain name)
-<span class="hljs-attribute">RequestHeader</span> set <span class="hljs-string">"X-Forwarded-Proto"</span> expr=<span class="hljs-variable">%{REQUEST_SCHEME}</span>
-<span class="hljs-section">&lt;/VirtualHost&gt;</span>
-<span class="hljs-section">&lt;VirtualHost *:80&gt;</span>
-<span class="hljs-attribute"><span class="hljs-nomarkup">ServerName</span></span> (domain name)
-<span class="hljs-attribute">ProxyPreserveHost</span> <span class="hljs-literal">On</span>
-<span class="hljs-attribute">ProxyPass</span> / http://localhost:5000/
-<span class="hljs-attribute">ProxyPassReverse</span> / http://localhost:5000/
-<span class="hljs-attribute">ErrorLog</span> <span class="hljs-variable">${APACHE_LOG_DIR}</span>hato-error.log
-<span class="hljs-attribute">CustomLog</span> <span class="hljs-variable">${APACHE_LOG_DIR}</span>hato-access.log common
-<span class="hljs-section">&lt;/VirtualHost&gt;</span>
-</code></pre><p>To enable the site, run the following</p>
-<pre><code><span class="hljs-selector-tag">sudo</span> <span class="hljs-selector-tag">a2ensite</span> <span class="hljs-selector-tag">streamdata</span><span class="hljs-selector-class">.conf</span>
-</code></pre><p>Go to your web browser and navigate to <code>http://(domain name)</code>. The domain dame is where you host the Hato service. If you see the Hato introduction page, the service is running correctly.</p>
-<h2 id="7-securing-streamdata-optional-">7. Securing StreamData (optional)</h2>
-<p>It&#39;s recommended to use HTTPS to do any requests between your application and DreamData. You can use the Let&#39;s Encrypt service to retrieve a free SSL certificate. You can do this by following <a href="https://www.digitalocean.com/community/tutorials/how-to-secure-apache-with-let-s-encrypt-on-ubuntu-16-04">these instructions</a>.</p>
-<h2 id="8-updating-streamdata">8. Updating StreamData</h2>
-<p>You can update StreamData easily by performing a <code>git pull</code> as long you cloned the repo using Git. </p>
-<p>First off, turn off the StreamData service.</p>
-<pre><code>sudo service streamdata <span class="hljs-built_in">stop</span>
-</code></pre><p>In the directory containing the StreamData application, run the following in the terminal:</p>
-<pre><code><span class="hljs-attribute">git pull</span>
-</code></pre><p>After pulling from the latest source, start the StreamData service again</p>
-<pre><code><span class="hljs-symbol">sudo</span> service <span class="hljs-keyword">streamdata </span>start
 </code></pre><h1 id="license">License</h1>
 <p>StreamData is open source and licensed under Apache License 2.0</p>
 </body>
+</html>
