@@ -1,9 +1,7 @@
 # StreamData
-Stream Data is a REST API that allows applications to retrieve a list of legal stream URLs for a given title. Database loading script and a Flask based REST API sever is written in Python.
+Stream Data is a REST API that allows applications to retrieve a list of legal stream URLs for a given title. Database loading script and a Flask based REST API sever is written in Python and works with Python 3, not 2.x.
 
 The app uses legal stream link data [Because.moe](https://because.moe). The difference is that the whole stream data does not need to be downloaded completely and only need to retreive what you need. You will be able to use the title or MyAnimeList ID to look up links for a given title.
-
-StreamData only supports Python 3. 
 
 # Why StreamData?
 Providing stream links to your applications allows users to find where to watch a given show through legal streaming. Illegal/Pirated streams hurts the creators and animation studios that make an anime production possible. StreamData only provides legal sources where you can watch a given title (e.g. Crunchyroll, Funimation, Amazon, HiDive, etc) and not illegal sources.
@@ -20,9 +18,9 @@ StreamData uses two different scripts. load.py is the script that is set to run 
 The frontend provides the rest API, allowing the user's apps to obtain stream data by title or MyAnimeList title id.
 
 # Requirements
-* Apache with the proxy and proxy_http module installed and enabled
-* Python 3.x or later
-* Following packages installed: mysql-connector-python, flask, urllib
+* Apache with wsgi (libapache2-mod-wsgi-py3) module installed and enabled. The (libapache2-mod-wsgi module will not work.
+* Python 3.x or later, the latest version is recommended.
+* Following packages installed: mysql-connector-python, flask, and urllib. You can install these using `pip`. 
 
 # How to use the API
 ## API Endpoints
@@ -33,7 +31,7 @@ GET http://streamdata.malupdaterosx.moe/search/(region)?q=(search term)
 
 | Parameter | Value | Required |
 |:---|:---|:---|
-| region| `us` or `ca` or `uk` or `ai` | `true` |
+| region| `us` or `ca` or `uk` or `au` | `true` |
 | q | Title (URL Encoded) | `true` |
 
 #### Example
@@ -76,7 +74,7 @@ GET http://streamdata.malupdaterosx.moe/lookup/(region)/(MAL ID)
 
 | Parameter | Value | Required |
 |:---|:---|:---|
-| region| `us` or `ca` or `uk` or `ai` | `true` |
+| region| `us` or `ca` or `uk` or `au` | `true` |
 | MAL ID| MyAnimeList Title ID | `true` |
 
 #### Example
@@ -168,24 +166,15 @@ sudo a2ensite streamdata.conf
 Go to your web browser and navigate to `http://(domain name)`. The domain dame is where you host the Hato service. If you see the Hato introduction page, the service is running correctly.
 
 
-## 7. Securing StreamData (optional)
+## 6. Securing StreamData (optional)
 It's recommended to use HTTPS to do any requests between your application and DreamData. You can use the Let's Encrypt service to retrieve a free SSL certificate. You can do this by following [these instructions](https://www.digitalocean.com/community/tutorials/how-to-secure-apache-with-let-s-encrypt-on-ubuntu-16-04).
 
-## 8. Updating StreamData
+## 7. Updating StreamData
 You can update StreamData easily by performing a `git pull` as long you cloned the repo using Git. 
 
-First off, turn off the StreamData service.
-```
-sudo service streamdata stop
-```
 In the directory containing the StreamData application, run the following in the terminal:
 ```
 git pull
 ```
-After pulling from the latest source, start the StreamData service again
-```
-sudo service streamdata start
-```
-
 # License
 StreamData is open source and licensed under Apache License 2.0
