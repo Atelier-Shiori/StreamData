@@ -49,7 +49,7 @@ def loadResultsByQuery(query, region) :
         fresults = {"data" : results, "meta":{"query": query, "region":region, "count": len(results)}}
         return jsonify(fresults), 200
     else :
-        fresults = {"data": None, "error" : "Not Found", "meta":{"query": query, "region":region}}
+        fresults = {"data": None, "error" : "Not Found", "meta" : {"query" : query, "region" : region}}
         return jsonify(fresults), 400
 
 def loadResultsByMALID(malid, region) :
@@ -61,10 +61,10 @@ def loadResultsByMALID(malid, region) :
     results = mycursor.fetchall()
     fresults = type(dict);
     if len(results) > 0 :
-        fresults = {"data" : results, "count": len(results)}
+        fresults = {"data" : results, "meta" :{"mal_id" : mal_id, "region" :region, "count": len(results)}}
         return jsonify(fresults), 200
     else :
-        fresults = {"data": None, "error" : "Not Found"}
+        fresults = {"data": None, "error" : "Not Found", "meta" : {"mal_id" : mal_id, "region" : region}}
         return jsonify(fresults), 400
 
 def openConnection():
