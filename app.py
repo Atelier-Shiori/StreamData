@@ -61,7 +61,7 @@ def loadResultsByMALID(malid, region) :
     results = mycursor.fetchall()
     fresults = type(dict);
     if len(results) > 0 :
-        fresults = {"data" : results, "meta" :{"mal_id" : malid, "region" :region, "count": len(results)}}
+        fresults = {"data" : results, "meta" : {"mal_id" : malid, "region" : region, "count" : len(results)}}
         return jsonify(fresults), 200
     else :
         fresults = {"data": None, "error" : "Not Found", "meta" : {"mal_id" : malid, "region" : region}}
