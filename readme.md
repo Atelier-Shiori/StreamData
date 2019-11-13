@@ -128,67 +128,37 @@ A cron job needs to be created so it can run the load.py, which updates the stre
 0 0 1 * * python3 /path/to/StreamData/load.py > load.log
 ```
 
-## 5. Create system.d service
-StreamData runs as a service which Apache with a virtual site will access as a reserve proxy. All the requests StreamData recieves from Apache will get processed and the response sent back to Apache, which it will get served to the Flask application.
-
-To create a service, run the following in the terminal:
+## 5. Configure Apache
+Make sure wsgi is enabled. You can do this by running the following commands.
 ```
-sudo nano /etc/systemd/system/streamdata.service
+sudo a2enmod wsgi 
 ```
 
-Paste the following into hato.service and save the file.
+If it's not installed, run the following command:
 ```
-[Unit]
-Description=StreamData Service Web API
-
-[Service]
-WorkingDirectory=/path/to/StreamData
-ExecStart=python3 /path/to/StreamData/app.py
-Restart=always
-# Restart service after 10 seconds if the dotnet service crashes:
-RestartSec=10
-KillSignal=SIGINT
-SyslogIdentifier=streamdata-api
-User=www-data
-Environment=FLASK_ENV=production
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Enable the service by running the following:
-```
-sudo systemctl enable streamdata.service
-```
-
-Start and verify that Hato is running.
-
-```
-sudo service streamdata start
-```
-
-## 6. Configure Apache
-Make sure mod_proxy, mod_proxy_http is enabled. You can do this by running the following commands.
-```
-sudo a2enmod proxy
-sudo a2enmod proxy_http
+sudo apt-get install libapache2-mod-wsgi-py3
 ```
 
 In `/etc/apache2/sites-available`, create a site configuration file called hato.conf with the following. (Change the server name to the domain name where you will host the service)
 ```
-<VirtualHost *:*>
-ServerName (domain name)
-RequestHeader set "X-Forwarded-Proto" expr=%{REQUEST_SCHEME}
-</VirtualHost>
+WSGIDaemonProcess flask_streamdata user=www-data group=www-data threads=2
 <VirtualHost *:80>
-ServerName (domain name)
-ProxyPreserveHost On
-ProxyPass / http://localhost:5000/
-ProxyPassReverse / http://localhost:5000/
-ErrorLog ${APACHE_LOG_DIR}hato-error.log
-CustomLog ${APACHE_LOG_DIR}hato-access.log common
+                ServerName streamdata.your-domain-here.com
+                WSGIScriptAlias / /path/to/StreamData/streamdata.wsgi
+                <Directory /path/to/StreamData/>
+                        Require all granted
+                </Directory>
+                Alias /static /path/to/StreamData/static
+                <Directory /path/to/StreamData/static/>
+                        Require all granted
+                </Directory>
+                ErrorLog ${APACHE_LOG_DIR}/error.log
+                LogLevel warn
+                CustomLog ${APACHE_LOG_DIR}/access.log combined
 </VirtualHost>
 ```
+
+In the StreamData directory, copy streamdata_sample.wsgi to streamdata.wsgi. Replace the "/path/to" to the absolute path of StreamData.
 
 To enable the site, run the following
 ```
